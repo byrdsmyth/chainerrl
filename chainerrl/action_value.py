@@ -58,12 +58,14 @@ class DiscreteActionValue(ActionValue):
 
     @cached_property
     def greedy_actions(self):
+#        print("chainer.Variable(self.q_values.array.argmax(axis=1).astype(np.int32))")
         return chainer.Variable(
             self.q_values.array.argmax(axis=1).astype(np.int32))
 
     @cached_property
     def max(self):
         with chainer.force_backprop_mode():
+#            print("F.select_item(self.q_values, self.greedy_actions)")
             return F.select_item(self.q_values, self.greedy_actions)
 
     def evaluate_actions(self, actions):
@@ -80,6 +82,7 @@ class DiscreteActionValue(ActionValue):
         return F.sum(F.softmax(beta * self.q_values) * self.q_values, axis=1)
 
     def __repr__(self):
+        print("'DiscreteActionValue greedy_actions:{} q_values:{}'.format(self.greedy_actions.array,self.q_values_formatter(self.q_values.array))")
         return 'DiscreteActionValue greedy_actions:{} q_values:{}'.format(
             self.greedy_actions.array,
             self.q_values_formatter(self.q_values.array))
@@ -89,6 +92,7 @@ class DiscreteActionValue(ActionValue):
         return (self.q_values,)
 
     def __getitem__(self, i):
+        print("DiscreteActionValue(self.q_values[i], q_values_formatter=self.q_values_formatter)")
         return DiscreteActionValue(
             self.q_values[i], q_values_formatter=self.q_values_formatter)
 

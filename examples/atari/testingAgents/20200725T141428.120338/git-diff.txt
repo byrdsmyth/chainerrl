@@ -1,0 +1,120 @@
+diff --git a/chainerrl/agent.py b/chainerrl/agent.py
+index 9f96915d..ba7ae530 100644
+--- a/chainerrl/agent.py
++++ b/chainerrl/agent.py
+@@ -105,8 +105,12 @@ class AttributeSavingMixin(object):
+         os.makedirs(dirname, exist_ok=True)
+         ancestors.append(self)
+         for attr in self.saved_attributes:
++            print("Attr is: ")
++            print(attr)
+             assert hasattr(self, attr)
+             attr_value = getattr(self, attr)
++            print("attr_valu is: ")
++            print(attr_value)
+             if attr_value is None:
+                 continue
+             if isinstance(attr_value, AttributeSavingMixin):
+diff --git a/chainerrl/experiments/evaluator.py b/chainerrl/experiments/evaluator.py
+index c333fbc2..8dd6a9ed 100644
+--- a/chainerrl/experiments/evaluator.py
++++ b/chainerrl/experiments/evaluator.py
+@@ -6,7 +6,9 @@ import time
+ 
+ import numpy as np
+ 
++from chainer import serializers
+ import chainerrl
++import keras
+ 
+ 
+ """Columns that describe information about an experiment.
+@@ -256,14 +258,16 @@ def eval_performance(env, agent, n_steps, n_episodes, max_episode_len=None,
+ 
+ 
+ def record_stats(outdir, values):
++    print("using custom scores recorder")
+     with open(os.path.join(outdir, 'scores.txt'), 'a+') as f:
+         print('\t'.join(str(x) for x in values), file=f)
+ 
+ 
+ def save_agent(agent, t, outdir, logger, suffix=''):
++    print("Using custom agent save")
+     dirname = os.path.join(outdir, '{}{}'.format(t, suffix))
+-    agent.save(dirname)
+-    logger.info('Saved the agent to %s', dirname)
++    agent.save('model')
++    logger.info('Saved the agent with hdf5 format to %s', dirname)
+ 
+ 
+ class Evaluator(object):
+diff --git a/chainerrl/experiments/train_agent.py b/chainerrl/experiments/train_agent.py
+index 29b3b031..ffe289b9 100644
+--- a/chainerrl/experiments/train_agent.py
++++ b/chainerrl/experiments/train_agent.py
+@@ -9,7 +9,7 @@ from chainerrl.misc.ask_yes_no import ask_yes_no
+ def save_agent_replay_buffer(agent, t, outdir, suffix='', logger=None):
+     logger = logger or logging.getLogger(__name__)
+     filename = os.path.join(outdir, '{}{}.replay.pkl'.format(t, suffix))
+-    agent.replay_buffer.save(filename)
++    agent.replay_buffer.save_hdf5(filename)
+     logger.info('Saved the current replay buffer to %s', filename)
+ 
+ 
+@@ -127,7 +127,7 @@ def train_agent_with_evaluation(agent,
+             the best-so-far score, the current agent is saved.
+         logger (logging.Logger): Logger used in this function.
+     """
+-
++    print("In custom train agent with eval function")
+     logger = logger or logging.getLogger(__name__)
+ 
+     os.makedirs(outdir, exist_ok=True)
+diff --git a/chainerrl/links/dqn_head.py b/chainerrl/links/dqn_head.py
+index 78d48f42..76a149a9 100644
+--- a/chainerrl/links/dqn_head.py
++++ b/chainerrl/links/dqn_head.py
+@@ -13,10 +13,14 @@ class NatureDQNHead(chainer.ChainList):
+         self.n_output_channels = n_output_channels
+ 
+         layers = [
++            #L.Convolution2D(n_input_channels, out_channel=32, ksize=8, stride=4, pad=0, nobias=False, initialW=None, initial_bias=bias, *, dilate=1, groups=1),
+             L.Convolution2D(n_input_channels, 32, 8, stride=4,
+                             initial_bias=bias),
++            #L.Convolution2D(n_input_channels=32, out_channel=64, ksize=4, stride=2, pad=0, nobias=False, initialW=None, initial_bias=bias, *, dilate=1, groups=1),
+             L.Convolution2D(32, 64, 4, stride=2, initial_bias=bias),
++            #L.Convolution2D(n_input_channels=64, out_channel=64, ksize=3, stride=1, pad=0, nobias=False, initialW=None, initial_bias=bias, *, dilate=1, groups=1),
+             L.Convolution2D(64, 64, 3, stride=1, initial_bias=bias),
++            #L.Convolution2D(in_size=3136, out_size=n_output_channels, nobias=False, initialW=None, initial_bias=bias),
+             L.Linear(3136, n_output_channels, initial_bias=bias),
+         ]
+ 
+diff --git a/examples/atari/train_dqn_ale.py b/examples/atari/train_dqn_ale.py
+index ea6f26c8..2bb95a9a 100644
+--- a/examples/atari/train_dqn_ale.py
++++ b/examples/atari/train_dqn_ale.py
+@@ -68,6 +68,7 @@ def parse_agent(agent):
+ 
+ 
+ def main():
++    print("Using the customized DQN trainer")
+     parser = argparse.ArgumentParser()
+     parser.add_argument('--env', type=str, default='BreakoutNoFrameskip-v4',
+                         help='OpenAI Atari domain to perform algorithm on.')
+@@ -142,7 +143,7 @@ def main():
+     test_seed = 2 ** 31 - 1 - args.seed
+ 
+     args.outdir = experiments.prepare_output_dir(args, args.outdir)
+-    print('Output files are saved in {}'.format(args.outdir))
++    print('In custom DQN file and Output files are saved in {}'.format(args.outdir))
+ 
+     def make_env(test):
+         # Use different random seeds for train and test envs
+@@ -227,6 +228,7 @@ def main():
+             args.eval_n_runs, eval_stats['mean'], eval_stats['median'],
+             eval_stats['stdev']))
+     else:
++        print("From custom DQN, calling train agent with eval")
+         experiments.train_agent_with_evaluation(
+             agent=agent, env=env, steps=args.steps,
+             eval_n_steps=None,

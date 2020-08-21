@@ -9,7 +9,7 @@ from chainerrl.misc.ask_yes_no import ask_yes_no
 def save_agent_replay_buffer(agent, t, outdir, suffix='', logger=None):
     logger = logger or logging.getLogger(__name__)
     filename = os.path.join(outdir, '{}{}.replay.pkl'.format(t, suffix))
-    agent.replay_buffer.save(filename)
+    agent.replay_buffer.save_hdf5(filename)
     logger.info('Saved the current replay buffer to %s', filename)
 
 
@@ -127,7 +127,7 @@ def train_agent_with_evaluation(agent,
             the best-so-far score, the current agent is saved.
         logger (logging.Logger): Logger used in this function.
     """
-
+    print("In custom train agent with eval function")
     logger = logger or logging.getLogger(__name__)
 
     os.makedirs(outdir, exist_ok=True)

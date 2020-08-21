@@ -6,7 +6,9 @@ import time
 
 import numpy as np
 
+from chainer import serializers
 import chainerrl
+import keras
 
 
 """Columns that describe information about an experiment.
@@ -256,14 +258,15 @@ def eval_performance(env, agent, n_steps, n_episodes, max_episode_len=None,
 
 
 def record_stats(outdir, values):
+    print("using custom scores recorder")
     with open(os.path.join(outdir, 'scores.txt'), 'a+') as f:
         print('\t'.join(str(x) for x in values), file=f)
 
 
 def save_agent(agent, t, outdir, logger, suffix=''):
+    print("Using custom agent save")
     dirname = os.path.join(outdir, '{}{}'.format(t, suffix))
-    agent.save(dirname)
-    logger.info('Saved the agent to %s', dirname)
+    agent.save('model')
 
 
 class Evaluator(object):

@@ -2,7 +2,11 @@ from abc import ABCMeta
 from abc import abstractmethod
 from abc import abstractproperty
 import os
+import sys
+import onnx_chainer
+from chainer import functions as F
 
+import chainer
 from chainer import serializers
 import numpy
 import warnings
@@ -105,8 +109,12 @@ class AttributeSavingMixin(object):
         os.makedirs(dirname, exist_ok=True)
         ancestors.append(self)
         for attr in self.saved_attributes:
+            print("Starting iteration and Attr is: ")
+            print(attr)
             assert hasattr(self, attr)
             attr_value = getattr(self, attr)
+            print("attr_valu is: ")
+            print(attr_value)
             if attr_value is None:
                 continue
             if isinstance(attr_value, AttributeSavingMixin):
@@ -114,11 +122,40 @@ class AttributeSavingMixin(object):
                     attr_value is ancestor
                     for ancestor in ancestors
                 ), "Avoid an infinite loop"
+                print("saving outside of else, and attr_value is...")
+                print(attr_value)
                 attr_value.__save(os.path.join(dirname, attr), ancestors)
             else:
-                serializers.save_npz(
-                    os.path.join(dirname, '{}.npz'.format(attr)),
-                    getattr(self, attr))
+                print("In the ELSE and attr is: ")
+                print(attr)
+                save_path = os.path.join(dirname, '{}.npz'.format(attr))
+                serializers.save_npz(save_path, getattr(self, attr))
+                save_path = os.path.join(dirname, '{}.h5'.format(attr))
+                serializers.save_hdf5(save_path, getattr(self, attr))
+#                if (attr == "model"):
+#                    numpy.set_printoptions(threshold=sys.maxsize)
+#                    print("save_path is: ")
+#                    print(save_path)
+#                    print("Weights are: ")
+#                    weights = numpy.load(save_path)
+#                    for item in weights:
+#                        print("\n Item" + item + ">>>>>>>>>>>>>>>>>>>>>>>>>")
+#                        sz = str(weights[item].size)
+#                        print("Size: " + sz)
+#                        dim = str(weights[item].ndim)
+#                        print("Dimensions: " + dim)
+#                        print(weights[item])
+#                        print(numpy.array(weights[item]))
+                    # saving as universal network model...
+                    # Prepare dummy data, not sure what the 4th value should be?
+                model = getattr(self, attr)
+                x = numpy.zeros((4, 84, 84), dtype=numpy.float32)[None]
+                # Put Chainer into inference mode
+                with chainer.using_config('train', False):
+                    #chainer_out = model(x).array
+                    chainer_out = model(x).q_values
+                # Now save model
+                onnx_model = onnx_chainer.export(getattr(self, attr), x, filename='convnet.onnx')
         ancestors.pop()
 
     def load(self, dirname):

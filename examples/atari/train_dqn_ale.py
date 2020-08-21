@@ -68,6 +68,7 @@ def parse_agent(agent):
 
 
 def main():
+    print("Using the customized DQN trainer")
     parser = argparse.ArgumentParser()
     parser.add_argument('--env', type=str, default='BreakoutNoFrameskip-v4',
                         help='OpenAI Atari domain to perform algorithm on.')
@@ -142,7 +143,7 @@ def main():
     test_seed = 2 ** 31 - 1 - args.seed
 
     args.outdir = experiments.prepare_output_dir(args, args.outdir)
-    print('Output files are saved in {}'.format(args.outdir))
+    print('In custom DQN file and Output files are saved in {}'.format(args.outdir))
 
     def make_env(test):
         # Use different random seeds for train and test envs
@@ -227,6 +228,7 @@ def main():
             args.eval_n_runs, eval_stats['mean'], eval_stats['median'],
             eval_stats['stdev']))
     else:
+        print("From custom DQN, calling train agent with eval")
         experiments.train_agent_with_evaluation(
             agent=agent, env=env, steps=args.steps,
             eval_n_steps=None,

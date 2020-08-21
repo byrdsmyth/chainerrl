@@ -13,11 +13,16 @@ class NatureDQNHead(chainer.ChainList):
         self.n_output_channels = n_output_channels
 
         layers = [
+            #L.Convolution2D(n_input_channels, out_channel=32, ksize=8, stride=4, pad=0, nobias=False, initialW=None, initial_bias=bias, *, dilate=1, groups=1),
             L.Convolution2D(n_input_channels, 32, 8, stride=4,
                             initial_bias=bias),
+            #L.Convolution2D(n_input_channels=32, out_channel=64, ksize=4, stride=2, pad=0, nobias=False, initialW=None, initial_bias=bias, *, dilate=1, groups=1),
             L.Convolution2D(32, 64, 4, stride=2, initial_bias=bias),
+            #L.Convolution2D(n_input_channels=64, out_channel=64, ksize=3, stride=1, pad=0, nobias=False, initialW=None, initial_bias=bias, *, dilate=1, groups=1),
             L.Convolution2D(64, 64, 3, stride=1, initial_bias=bias),
+            #L.Convolution2D(in_size=3136, out_size=n_output_channels, nobias=False, initialW=None, initial_bias=bias),
             L.Linear(3136, n_output_channels, initial_bias=bias),
+#            L.Linear(7744, n_output_channels, initial_bias=bias),
         ]
 
         super(NatureDQNHead, self).__init__(*layers)

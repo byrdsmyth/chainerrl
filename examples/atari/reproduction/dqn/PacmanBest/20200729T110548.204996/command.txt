@@ -1,0 +1,1 @@
+train_dqn.py --load-pretrained --pretrained-type final --outdir PacmanBest --env MsPacmanNoFrameskip-v4 --render --steps 5000 --gpu -1

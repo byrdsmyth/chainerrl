@@ -1,0 +1,1 @@
+train_dqn.py --load-pretrained --env MsPacmanNoFrameskip-v4 --pretrained-type best --gpu -1 --steps 2000 --outdir BestDQNPacman
